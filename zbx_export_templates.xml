@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.4</version>
+    <date>2022-11-16T12:33:45Z</date>
+    <groups>
+        <group>
+            <uuid>7df96b18c230490a9a0a9e2307226338</uuid>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <uuid>42a8c92069af4d5b96d5805f5c18dea3</uuid>
+            <template>Windows FSRM Quota Monitoring</template>
+            <name>Windows FSRM Quota Monitoring</name>
+            <description>This template is designed to monitor quotas created in the File Server Resource Manager (FSRM) service in Windows Server 2008. Monitoring is performed by parsing reports from the STORREPT.EXE utility</description>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>a5bd114f264d462ca1f96c3c56feaa13</uuid>
+                    <name>Error message</name>
+                    <type>DEPENDENT</type>
+                    <key>fsrm_qm_error[]</key>
+                    <delay>0</delay>
+                    <history>5d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <parameters>
+                                <parameter>$[&quot;data&quot;]['error']</parameter>
+                            </parameters>
+                            <error_handler>CUSTOM_VALUE</error_handler>
+                            <error_handler_params>ok</error_handler_params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>WinFSRMQuotaMonitoring[&quot;GetQuotasUsage&quot;,&quot;{$QUOTA_SCOPE}&quot;]</key>
+                    </master_item>
+                    <tags>
+                        <tag>
+                            <tag>Application</tag>
+                            <value>FSRM Quota monitoring</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>852513d28e5c4694909596283734022c</uuid>
+                            <expression>last(/Windows FSRM Quota Monitoring/fsrm_qm_error[])&lt;&gt;&quot;ok&quot; or nodata(/Windows FSRM Quota Monitoring/fsrm_qm_error[],1d)=1</expression>
+                            <name>Error getting quota information: &quot;{ITEM.LASTVALUE}&quot;</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>792f63b5fa1744bfb8d12d0644c215cb</uuid>
+                    <name>Quota usage information</name>
+                    <key>WinFSRMQuotaMonitoring[&quot;GetQuotasUsage&quot;,&quot;{$QUOTA_SCOPE}&quot;]</key>
+                    <delay>1h</delay>
+                    <history>2d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>This is the master item.</description>
+                    <tags>
+                        <tag>
+                            <tag>Application</tag>
+                            <value>FSRM Quota monitoring</value>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>8ab630ae4dcf457a9b3262bed511109f</uuid>
+                    <name>Discover quotas</name>
+                    <key>WinFSRMQuotaMonitoring[&quot;DiscoverQuotas&quot;,&quot;{$QUOTA_SCOPE}&quot;]</key>
+                    <delay>24h</delay>
+                    <description>Quota detection
+
+Macros available:
+{#KEY} - used to link to the Master Item
+{#FOLDER} - full path to the folder for which the quota was found. For example: D:\Shares\user
+{#FOLDER_URL} network path to {#FOLDER}. For example: \\FS\Shares\user</description>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>cc8f06c177f44cf9b2ae58dd2ab26377</uuid>
+                            <name>{#FOLDER} quota size in bytes</name>
+                            <type>DEPENDENT</type>
+                            <key>fsrm_qm_quota_size_in_bytes[{#FOLDER}]</key>
+                            <delay>0</delay>
+                            <history>2d</history>
+                            <trends>0</trends>
+                            <units>B</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.['data']['{#KEY}']['Limit']</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>WinFSRMQuotaMonitoring[&quot;GetQuotasUsage&quot;,&quot;{$QUOTA_SCOPE}&quot;]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>FSRM Quota monitoring</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>21a04bdc4e084bf795afe352a6008617</uuid>
+                            <name>{#FOLDER} quota usage in bytes</name>
+                            <type>DEPENDENT</type>
+                            <key>fsrm_qm_quota_usage_in_bytes[{#FOLDER}]</key>
+                            <delay>0</delay>
+                            <history>15d</history>
+                            <trends>90d</trends>
+                            <units>B</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.['data']['{#KEY}']['Used']</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>WinFSRMQuotaMonitoring[&quot;GetQuotasUsage&quot;,&quot;{$QUOTA_SCOPE}&quot;]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>FSRM Quota monitoring</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>40fc599b46c54e00bb179e260b527900</uuid>
+                            <name>{#FOLDER} quota usage in percentage</name>
+                            <type>DEPENDENT</type>
+                            <key>fsrm_qm_quota_usage_in_percentage[{#FOLDER}]</key>
+                            <delay>0</delay>
+                            <history>15d</history>
+                            <trends>90d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>%</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.['data']['{#KEY}']['PercentUsed']</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>WinFSRMQuotaMonitoring[&quot;GetQuotasUsage&quot;,&quot;{$QUOTA_SCOPE}&quot;]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>FSRM Quota monitoring</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>1a3172c8a89b49279f48c9884d7ce6bd</uuid>
+                                    <expression>last(/Windows FSRM Quota Monitoring/fsrm_qm_quota_usage_in_percentage[{#FOLDER}])&gt;{$HIGH_QUOTA_USAGE}</expression>
+                                    <name>Quota used by {ITEM.LASTVALUE} for {#FOLDER}</name>
+                                    <opdata>{#FOLDER_URL}</opdata>
+                                    <priority>HIGH</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$HIGH_QUOTA_USAGE}</macro>
+                    <value>95</value>
+                    <description>Maximum quota usage (%) for a trigger with HIGH severity</description>
+                </macro>
+                <macro>
+                    <macro>{$QUOTA_SCOPE}</macro>
+                    <description>The paths to be scanned. You can specify multiple with |. For example D:\share|C:\dir1</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
